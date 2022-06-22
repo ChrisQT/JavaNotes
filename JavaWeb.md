@@ -242,9 +242,84 @@ pstmt.close();
 conn.close();
 ```
 
-- MyBatis代码：
+- Mybatis步骤
+  - 创建Maven模块，导入坐标
+  - 编写Mybatis核心配置文件 ->替换连接信息，解决硬编码问题
+  - 编写SQL映射文件->统一管理SQL语句，解决硬编码问题
+  - 编码：
+    - 定义POJO类（简单JAVA对象）
+    - 加载核心配置文件，获取SqlSessionFactory对象
+    - 获取SqlSession对象，执行SQL语句
+    - 释放资源
 
-```Java
+```java
+// 1.加载mybatis的核心配置文件，获取sqlSessionFactory
+String resource = "mybatis-config.xml";
+InputStream inputStream = Resources.getResourceAsStream(resource);
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
 
+// 2.获取sqlSession对象，用它执行SQL语句
+SqlSession sqlSession = sqlSessionFactory.openSession();
+
+// 3.执行SQL语句
+List<Employee> emps = sqlSession.selectList("test.selectFirstTen");
+System.out.println(emps);
+
+// 4.释放资源
+sqlSession.close();
 ```
 
+#### 5.1 Mapper代理开发
+
+解决原生方式中的硬编码，简化后期执行SQL。原先：
+
+```java
+List<Employee> emps = sqlSession.selectList("test.selectFirstTen");
+System.out.println(emps);
+```
+
+使用Mapper开发：
+
+```java
+EmployeeMapper employeeMapper = sqlSession.getMapper(EmployeeMapper.class)
+List<Employee> emps = employeeMapper.selectFirstTen();
+```
+
+- 使用Mapper代理完成入门案例：
+  1. 定义与SQL映射文件同名的Mapper接口，并且将Mapper接口和SQL映射文件放置于同一目录下
+  2. 设置SQL映射文件的namespace属性为Mapper的接口全限定名
+  3. 在Mapper接口中定义方法，方法名为SQL映射文件中sql语句的id，并保持参数类型和返回值类型一致。
+  4. 编码
+     1. 通过SqlSession的getMapper方法获取Mapper接口的代理对象。
+     2. 调用对应方法完成sql的执行
+- TIPS：若Mapper接口名称和SQL映射文件名称相同，并在同一目录下，则可以使用包扫描的的方式简化SQL映射文件的加载
+
+```html
+<mappers>
+    <mapper resource="com/xjtu/mapper/EmployeeMapper.xml"/>
+    <mapper resource="com/xjtu/mapper/XXX.xml"/>
+    <mapper resource="com/xjtu/mapper/YYY.xml"/>
+</mappers>
+```
+
+或者：
+
+```html
+<mappers>
+    <package name="com.xjtu.mapper"/>
+</mappers>
+```
+
+#### 5.2 MyBatis配置
+
+- [MyBatis核心配置文件详解](https://mybatis.org/mybatis-3/zh/configuration.html)
+
+- 配置文件完成增删改查
+  1. 编写接口方法：Mapper接口   ```List<Employee> selectAll();```
+  2. 编写SQL语句：SQL映射文件  ``<select id="selectAll" resultType="employee"> select * from employees </select> ``
+  3. 执行方法，测试
+
+*__数据库表的字段名称和POJO的属性名称不一样时，MyBatis的自动封装会出问题！__解决方法：
+
+- SQL起别名 ``SELECT emp_id as empId``(不推荐)
+- 定义
