@@ -322,4 +322,155 @@ List<Employee> emps = employeeMapper.selectFirstTen();
 *__数据库表的字段名称和POJO的属性名称不一样时，MyBatis的自动封装会出问题！__解决方法：
 
 - SQL起别名 ``SELECT emp_id as empId``(不推荐)
-- 定义
+- 在pom文件中用ResultMap完成列名和属性之间的映射
+
+```java
+<mapper namespace="com.xjtu.mapper.EmployeeMapper">
+    <resultMap id="employeeResultMapper" type="com.xjtu.pojo.Employee">
+        <result column="emp_no" property="empNo"/>
+        <result column="birth_date" property="birthDate"/>
+        <result column="first_name" property="firstName"/>
+        <result column="last_name" property="lastName"/>
+        <result column="hire_date" property="hireDate"/>
+
+    </resultMap>
+
+    <select id="selectFirstTen" resultMap="employeeResultMapper">
+        select * from employees limit 10;
+    </select>
+</mapper>
+```
+
+*MyBatis中写SQL的参数占位符：
+
+- #{}：会将其替换为？，可以防止SQL注入
+- ${}：拼SQL，会存在SQL注入问题，表名或列名不固定时可用
+
+*特殊字符的处理：
+
+​	1. 转义字符 ：'<'可用'$lt'代替
+
+	2. CDATA区<![CDATA[特殊字符]]>
+
+#### 5.3 使用Mybatis完成增删改查
+
+- SQL多条件查询
+
+```java
+// 标明参数
+List<Employee> selectByCondition(@Param("status")int status, @Param("FirstName")String firstName, @param("gender")String gender);
+// 参数名和xml中一致
+List<Employee> selectByCondition(Employee employee);
+
+List<Employee> selectByCondition(Map map); 
+```
+
+```html
+<select id="selectByCondition" resultMap="employeeMap">
+    select * from employees where status = #{status}
+    and first_name Like #{firstname}
+    and gender = #{gender}
+</select>
+```
+
+- MyBatis的动态SQL支持
+  - 多条件动态查询
+
+```html
+<select id="selectByCondition" resultMap="employeeResultMapper">
+    select * from employees where 1=1
+    <if test="gender != null and gender != ''">
+        and gender = #{gender}
+    </if>
+    <if test="firstName != null and firstName != ''">
+        and first_name like #{firstName}
+    </if>
+</select>
+```
+
+或者
+
+```html
+<select id="selectByCondition" resultMap="employeeResultMapper">
+    select * from employees
+    <where>
+        <if test="gender != null and gender != ''">
+            and gender = #{gender}
+        </if>
+        <if test="firstName != null and firstName != ''">
+            and first_name like #{firstName}
+        </if>
+    </where>
+</select>
+```
+
+- 单条件动态查询
+
+  choose(when,otherwise)，逻辑类似Java的switch语句
+
+```html
+<select id="selectByCondition" resultMap="employeeResultMapper">
+    select * from employees where
+    <choose>
+        <when test="firstName != null and firstName != ''">
+            first_name like #{firstName}
+        </when>
+        <when test="gender != null and gender != ''">
+        	gender=#{gender}
+        </when>
+        <otherwise>
+            1 = 1
+        </otherwise>
+    </choose>
+</select>
+```
+
+或者
+
+```html
+<select id="selectByCondition" resultMap="employeeResultMapper">
+    select * from employees
+    <where>
+        <choose>
+            <when test="firstName != null and firstName != ''">
+                first_name like #{firstName}
+            </when>
+            <when test="gender != null and gender != ''">
+                gender=#{gender}
+            </when>
+        </choose>
+    </where>
+</select>
+```
+
+- MyBatis默认开启事务，因此修改操作需要手动提交。
+
+```java
+//开启连接
+SqlSession sqlSession = sqlSessionFactory.openSession();
+EmployeeMapper employeeMapper = sqlSession.getMapper(EmployeeMapper.class);
+//默认开启事务
+employeeMapper.add(emp);
+//手动提交
+sqlSession.commit();
+//释放资源
+sqlSession.close();
+```
+
+或者设置自动提交事务
+
+```java
+SqlSession sqlSession = sqlSessionFactory.openSession(autocommit:true);
+```
+
+- 当未提交时如何获得新增记录的主键：
+
+```html
+<insert useGeneratedKeys="true" keyProperty="id">SQL语句</insert>
+```
+
+```java
+employeeMapper.add(emp);
+Integer empNo = emp.getEmpNo();
+```
+
