@@ -31,9 +31,9 @@ stmt.excecuteUpdate(sql);
 
 DriverManager类
 
-​	1. 注册驱动
+1. 注册驱动
 
-	2. 获取数据库连接
+2. 获取数据库连接
 
 Connection
 
@@ -63,7 +63,7 @@ ResultSet excecuteQuery(sql): //执行DQL语句
 
 ResultSet
 
-	1. 封装DQL的查询结果
+1. 封装DQL的查询结果
 
 ```java
 ResultSet stmt.excecuteQuery(sql): // 执行DQL语句，返回ResultSet对象
@@ -80,7 +80,7 @@ PreparedStatement
 
 作用：预编译SQL语句并执行SQL语句
 
-	1. 获取PreparedStatement对象
+1. 获取PreparedStatement对象
 
 ```java
 //使用?作为占位符替代用户输入内容
@@ -474,3 +474,104 @@ employeeMapper.add(emp);
 Integer empNo = emp.getEmpNo();
 ```
 
+- MyBatis修改操作的动态SQL支持
+
+```html
+<update id="set">
+    update employees
+    <set>
+        <if test="birthDate != null and birthDate != ''">
+            birth_date = #{birthDate},
+            </if>
+        <if test="firstName != null and firstName != ''">
+            first_name = #{firstName},
+        </if>
+        <if test="lastName != null and lastName != ''">
+            last_name = #{lastName},
+        </if>
+        <if test="gender != null and gender != ''">
+            gender = #{gender},
+        </if>
+        <if test="hireDate != null and hireDate != ''">
+            hire_date = #{hireDate}
+        </if>
+        where emp_no = #{empNo}
+    </set>
+</update>
+```
+
+- MyBatis删除操作的动态SQL支持
+
+```java
+employeeMapper.deleteByIds(ids);
+```
+
+```html
+<!--
+	MyBatis会将数组参数，封装为一个Map集合。
+		* 默认：array = 数组
+		* 使用@Params注解改变map集合的默认key的名称
+-->
+<delete id="deleteByIds">
+    delete from employees
+    where emp_no in
+    <foreach collection="array" item="id" separator="," open="(" close=")">
+        #{id}
+    </foreach>
+</delete>
+```
+
+#### 5.4 MyBatis参数传递
+
+MyBatis接口方法可以接受各种各样的参数，MyBatis底层对于这些参数进行不同的封装处理方式
+
+- 单个参数：
+
+  - POJO类型：直接使用，属性名和参数占位符一致
+
+  - Map集合：直接使用，属性名和参数占位符一致
+
+  - Collection：封装成Map集合，可以用@Param注解
+
+    ``map.put("arg0", collection集合);``
+
+    ``map.put("collection", collection集合);``
+
+  - List：封装成Map集合，可以用@Param注解
+
+    ``map.put("arg0", list集合);``
+
+    ``map.put("collection", list集合);``
+
+    ``map.put("list", list集合);``
+
+  - Array：封装成Map集合，可以用@Param注解
+
+    ``map.put("arg0", array数组);``
+
+    ``map.put("array", array数组);``
+
+  - 其他类型：直接使用
+
+- 多个参数
+
+  MyBatis会将参数封装为Map集合，可以使用@Param注解，替换Map集合中的默认键名。
+
+```java
+map.put("arg0", 参数值1);
+map.put("param1", 参数值1);
+map.put("arg1", 参数值2);
+map.put("param2", 参数值2);
+```
+
+```java
+User select(@Param("username")String username, @Param("password")String Password)
+```
+
+#### 5.5 注解完成增删改查
+
+使用注解来映射简单语句会使代码显得更加简洁，但对于稍微复杂一点的语句，Java 注解不仅力不从心，还会让本就复杂的 SQL 语句更加混乱不堪。 因此，如果你需要做一些很复杂的操作，最好用 XML 来映射语句。
+
+```java
+@Select("select * from employees where emp_no = #{empNo}")
+```
