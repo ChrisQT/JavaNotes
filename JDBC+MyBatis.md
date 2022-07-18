@@ -495,8 +495,8 @@ Integer empNo = emp.getEmpNo();
         <if test="hireDate != null and hireDate != ''">
             hire_date = #{hireDate}
         </if>
-        where emp_no = #{empNo}
     </set>
+    where emp_no = #{empNo};
 </update>
 ```
 
