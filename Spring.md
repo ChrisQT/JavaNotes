@@ -525,54 +525,54 @@ public class BooksDaoImpl implements BookDao {
 ```
 
 ```html
-    <bean id="bookDao" class="com.xjtu.dao.impl.BooksDaoImpl">
-        <property name="array">
-            <array>
-                <value>1</value>
-                <value>2</value>
-                <value>3</value>
-            </array>
-        </property>
+<bean id="bookDao" class="com.xjtu.dao.impl.BooksDaoImpl">
+   <property name="array">
+        <array>
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+        </array>
+    </property>
 
-        <property name="list">
-            <list>
-                <value>a</value>
-                <value>b</value>
-                <value>c</value>
-            </list>
-        </property>
+    <property name="list">
+        <list>
+            <value>a</value>
+            <value>b</value>
+            <value>c</value>
+        </list>
+    </property>
 
-        <property name="set">
-            <set>
-                <value>1</value>
-                <value>2</value>
-                <value>3</value>
+    <property name="set">
+        <set>
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
             </set>
-        </property>
+    </property>
 
-        <property name="map">
-            <map>
-                <entry key="1" value="a"/>
-                <entry key="2" value="b"/>
-                <entry key="3" value="c"/>
-            </map>
-        </property>
+    <property name="map">
+        <map>
+            <entry key="1" value="a"/>
+            <entry key="2" value="b"/>
+            <entry key="3" value="c"/>
+        </map>
+    </property>
 
-        <property name="properties">
-            <props>
-                <prop key="a">x</prop>
-                <prop key="b">y</prop>
-                <prop key="c">z</prop>
-            </props>
-        </property>
-    </bean>
+    <property name="properties">
+        <props>
+           <prop key="a">x</prop>
+           <prop key="b">y</prop>
+           <prop key="c">z</prop>
+        </props>
+    </property>
+</bean>
 
-    <bean id="bookService" class="com.xjtu.service.impl.BookServiceImpl" autowire="byType"/>
+<bean id="bookService" class="com.xjtu.service.impl.BookServiceImpl" autowire="byType"/>
 ```
 
-*<array>和<list>可以混用
+*``<array>``和``<list>``可以混用
 
-*如果是引用类，<value>改成<ref bean="">即可。
+*如果是引用类，``<value>``改成``<ref bean="">``即可。
 
 # 十二、数据源对象管理
 
@@ -648,48 +648,48 @@ jdbc.password=123456
 2. 在applicationContext.xml中加载properties文件
 
 ```html
-    <context:property-placeholder location="jdbc.properties"/>
+<context:property-placeholder location="jdbc.properties"/>
 ```
 
 3. 使用属性占位符读取properties文件中的属性
 
 ```html
-    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
-        <property name="driverClassName" value="${jdbc.driver}"/>
-        <property name="url" value="${jdbc.url}"/>
-        <property name="username" value="${jdbc.username}"/>
-        <property name="password" value="${jdbc.password}"/>
-    </bean>
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="${jdbc.driver}"/>
+    <property name="url" value="${jdbc.url}"/>
+    <property name="username" value="${jdbc.username}"/>
+   <property name="password" value="${jdbc.password}"/>
+</bean>
 ```
 
 *如果属性名过于常用，可能与系统环境变量冲突，需要避免覆盖
 
 ```html
-    <context:property-placeholder location="jdbc.properties" system-properties-mode="NEVER"/>
+<context:property-placeholder location="jdbc.properties" system-properties-mode="NEVER"/>
 ```
 
 *如果需同时加载多个配置文件
 
 ```html
-    <context:property-placeholder location="jdbc.properties, other.properties"/>
+<context:property-placeholder location="jdbc.properties, other.properties"/>
 ```
 
 或者：
 
 ```html
-    <context:property-placeholder location="*.properties"/>
+<context:property-placeholder location="*.properties"/>
 ```
 
 或者自动扫描开发目录下的properties文件：
 
 ```html
-    <context:property-placeholder location="classpath:*.properties/>
+<context:property-placeholder location="classpath:*.properties/>
 ```
 
 甚至包含其他jar包的properties文件（推荐）：
 
 ```html
-    <context:property-placeholder location="classpath*:*.properties/>
+<context:property-placeholder location="classpath*:*.properties/>
 ```
 
 # 十四、容器
@@ -718,38 +718,38 @@ ApplicationContext ctx = new ClassPathXmlApplicationContext("bean1.xml", "beans.
 
 - bean设置相关
 
-| <bean                                          |                                     |
-| ---------------------------------------------- | ----------------------------------- |
-| id="bookDao"                                   | bean的 id                           |
-| name="dao daoImpl"                             | bean别名                            |
-| class="com.xjtu.dao.impl.BookDaoImpl"          | bean类型，静态工厂类，FactoryBean类 |
-| scope="singleton"                              | 控制bean的实力数量                  |
-| init-method="init"                             | 生命周期初始化方法                  |
-| destory-method="destory"                       | 生命周期销毁方法                    |
-| autowire="byType"                              | 自动装配类型                        |
-| factory-method="getInstance"                   | bean工厂方法                        |
-| factory-bean="com.xjtu.factory.BookDaoFactory" | 实例化工厂bean                      |
-| lazy-init="true"                               | 控制bean延迟加载                    |
-| />                                             |                                     |
+| ``<bean``                                          |                                     |
+| -------------------------------------------------- | ----------------------------------- |
+| ``id="bookDao"``                                   | bean的 id                           |
+| ``name="dao daoImpl"``                             | bean别名                            |
+| ``class="com.xjtu.dao.impl.BookDaoImpl"``          | bean类型，静态工厂类，FactoryBean类 |
+| ``scope="singleton"``                              | 控制bean的实力数量                  |
+| ``init-method="init"``                             | 生命周期初始化方法                  |
+| ``destory-method="destory"``                       | 生命周期销毁方法                    |
+| ``autowire="byType"``                              | 自动装配类型                        |
+| ``factory-method="getInstance"``                   | bean工厂方法                        |
+| ``factory-bean="com.xjtu.factory.BookDaoFactory"`` | 实例化工厂bean                      |
+| ``lazy-init="true"``                               | 控制bean延迟加载                    |
+| ``/>``                                             |                                     |
 
 - 依赖注入相关
 
-| <bean id="bookService" class="com.xjtu.dao.impl.BookSerivecImpl"> |                    |
+| ``<bean id="bookService" class="com.xjtu.dao.impl.BookSerivecImpl">`` |                    |
 | ------------------------------------------------------------ | ------------------ |
-| <constructor-arg name="bookDao" ref="bookDao"/>              | 构造器注入应用类型 |
-| <constructor-arg name="userDao" ref="userDao"/>              |                    |
-| <constructor-arg name="msg" value="WARN"/>                   | 构造器注入简单类型 |
-| <constructor-arg type="java.lang.String" index="3" value="WARN"/> |                    |
-| <property name="bookDao" ref="bookDao"/>                     | setter注入引用类型 |
-| <property name="userDao" ref="userDao"/>                     |                    |
-| <property name="msg" ref="WARN"/>                            | setter注入简单类型 |
-| <property name="names">                                      | list集合           |
-| <list>                                                       |                    |
-| <value>apple</value>                                         | 集合注入简单类型   |
-| <ref bean="dataSource">                                      | 集合注入应用类型   |
-| </list>                                                      |                    |
-| </property>                                                  |                    |
-| </bean>                                                      |                    |
+| ``<constructor-arg name="bookDao" ref="bookDao"/>``          | 构造器注入应用类型 |
+| ``<constructor-arg name="userDao" ref="userDao"/>``          |                    |
+| ``<constructor-arg name="msg" value="WARN"/>``               | 构造器注入简单类型 |
+| ``<constructor-arg type="java.lang.String" index="3" value="WARN"/>`` |                    |
+| ``<property name="bookDao" ref="bookDao"/>``                 | setter注入引用类型 |
+| ``<property name="userDao" ref="userDao"/>``                 |                    |
+| ``<property name="msg" ref="WARN"/>``                        | setter注入简单类型 |
+| ``<property name="names">``                                  | list集合           |
+| ``<list>``                                                   |                    |
+| ``<value>apple</value>``                                     | 集合注入简单类型   |
+| ``<ref bean="dataSource">``                                  | 集合注入应用类型   |
+| ``</list>``                                                  |                    |
+| ``</property>``                                              |                    |
+| ``</bean>``                                                  |                    |
 
 # 十六、注解开发
 
