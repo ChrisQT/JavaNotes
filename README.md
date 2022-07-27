@@ -7,7 +7,7 @@
 ### 二、SSM框架
 
 - [Spring](https://github.com/ChrisQT/JavaNotes/blob/master/Spring.md)
-- SpringMVC
+- [SpringMVC](https://github.com/ChrisQT/JavaNotes/blob/master/SpringMVC.md)
 - [MyBatis](https://github.com/ChrisQT/JavaNotes/blob/master/JDBC%2BMyBatis.md)
 
 ### 三、SpringBoot
