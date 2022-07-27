@@ -1169,7 +1169,6 @@ public class EmployeeServiceTest {
 
 - 连接点（JoinPoint）：程序执行过程中的任意位置，粒度为执行方法、抛出异常、设置变量等
   - 在SpringAOP中，理解为方法的执行
-
 - 切入点（PointCut）：匹配连接点的式子
   - 在SpringAOP中，一个切入点可以只描述一个具体方法，也可以匹配多个方法
     - 一个具体方法：com.example.dao包下的EmployeeDao接口中的无形参无返回值的save方法
@@ -1178,3 +1177,361 @@ public class EmployeeServiceTest {
   - 在SpringAOP中，功能最终以方法的形式呈现
 - 通知类：定义通知的类
 - 切面（Aspect）：描述通知和切入点的对应关系
+
+
+
+### 1. 简单入门
+
+- 开发模式：xml或者__注解__
+- 思路分析：
+  - 导入坐标（pom.xml）
+  - 制作连接点方法（原始类，Dao接口和实现类）
+  - 制作共性功能（通知类与通知）
+  - 定义切入点
+  - 绑定切入点和通知关系（切面）
+
+```xml
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-context</artifactId>
+    <version>5.2.10.RELEASE</version>
+</dependency>        
+
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjweaver</artifactId>
+    <version>1.9.4</version>
+</dependency>
+```
+
+```java
+package com.example.aop;
+
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.stereotype.Component;
+
+@Component
+@Aspect
+public class MyAdvice {
+    @Pointcut("execution(void com.example.dao.BookDao.save())")
+    private void pt(){}
+
+    @Before("pt()")
+    public void method(){
+        System.out.println("AOP Before!");
+    }
+}
+```
+
+*说明：切入点定义依托一个不具有实际意义的方法进行，即无参数，无返回值，方法体无实际逻辑
+
+最后需要在Spring 配置中对AOP注解驱动支持
+
+```java
+@Configuration
+@ComponentScan("com.example")
+@EnableAspectJAutoProxy
+public class SpringConfig {
+}
+```
+
+- AOP工作流程
+  1. Spring容器启动
+  2. 读取所有切面的配置中的切入点
+  3. __初始化bean，判定bean对应的类中的方法是否匹配到任意切入点__
+     - 匹配失败，创建对象
+     - __匹配成功，创建原始对象（目标对象）的代理对象__
+  4. 获取bean执行方法
+     - 获取bean，调用方法并执行，完成操作
+     - 获取的bean是代理对象时，根据代理对象的运行模式运行原始方法与增强的内容，完成操作
+
+- AOP核心概念
+  - 目标对象（Target）：原始功能去掉共性功能对应的类产生的对象，这种对象是无法完成最终工作的
+  - 代理（Proxy）：目标对象无法直接完成工作，需要将其进行功能回填，通过原始对象的代理对象完成
+
+- AOP切入点表达式
+
+  切入点：要进行增强的方法
+
+  切入表达式：要进行增强的方法的描述方法
+
+  描述方式：描述接口方法/实现类方法
+
+  - 语法格式 ``execution(public Employee com.example.service.EmployeeService.findById(int))``
+    - 动作关键字：描述切入点的行为动作，例如execution表示执行到切入点
+    - 访问修饰符：public，priavte等，__可以省略__
+    - 返回值
+    - 包名
+    - 类/接口名
+    - 方法名
+    - 参数
+    - 异常名：方法中抛出指定异常，__可以省略__
+
+  - 通配符
+
+    可以使用通配符描述切入点，快速描述
+
+    - ``*``：单个独立的任意符号，可以独立出现，也可以作为前缀或者后缀的匹配符出现
+
+    ``execution(public * com.example.*.EmployeeService.find*(*))``
+  
+    匹配com.example包下任意包中的EmployeeService类或者接口中所有find开头的带有一个参数的方法
+  
+    - ``..``：多个连续的任意符号，可以独立出现，常用于简化包名与参数的书写
+  
+    ``execution(public Employee com..EmployeeService.findById(..))``
+  
+    匹配com包下的任意包中的EmployeeService类或者接口中所有名称为findById的方法
+  
+    - ``+``：专用于匹配子类型
+  
+    ``execution(* *..*Service+.*(..))``
+  
+  - 书写技巧
+  
+    - 所有代码按照标准规范开发，否则一下技巧全部失效
+    - 描述切入点通常描述接口，而不描述实现类
+    - 访问控制修饰符针对针扣开发均采用public描述（可省略访问控制修饰符描述）
+    - 返回值类型对于增删改查使用类型精准描述，对于查询类使用``*``通配快速描述
+    - 报名书写尽量不使用..匹配，效率过低，常用``*``做单个包描述匹配，或精准匹配
+    - 接口名/类名书写名称与模块相关的采用``*``匹配，例如EmployeeService书写成``*Service``，绑定业务层接口名
+    - 方法名书写以动词进行精准匹配，名词采用``*``匹配，例如getById写成``getBy*``，selectAll写成selectAll
+    - 参数规则较为复杂，根据业务方法灵活调整
+    - 通常不适用异常作为匹配规则
+
+### 2. AOP通知类型
+
+- AOP通知描述了抽取的共性功能，根据共性功能抽取的位置不同，最终运行代码时要将其加入合理的位置
+- AOP通知共分成5种类型
+  - 前置通知
+  - 后置通知
+  - 环绕通知
+  - 返回后通知
+  - 抛出异常后通知
+- @Around注意事项
+  1. 环绕通知必须依赖形参ProceedingJointPoint才能实现对原始方法的调用，进而实现原始方法调用前后同时添加
+  2. 通知中如果未使用ProceedingJointPoint对原始方法进行调用将跳过原始方法的执行
+  3. 对原始方法的调用可以不接受返回值，通知方法设置成void即可，如果接受返回值，必须设定为Object类型
+  4. 原始方法的返回值如果是void类型，通知方法的返回值类型可以设置成void，也可以设置成Object；
+  5. 由于无法与之原始方法运行后是否会抛出异常，因此环绕通知方法必须抛出Throwable对象
+
+```java
+@Around("pt2()")
+public Object fn(ProceedingJoinPoint pjp) throws Throwable {
+    System.out.println("AOP AROUND BEFORE");
+    Integer proceed = (Integer) pjp.proceed();
+    System.out.println("AOP AROUND AFTER");
+    return proceed;
+}
+```
+
+### 3. AOP通知获取数据
+
+- 获取切入点方法的参数
+  - JoinPoint：适用于前置、后置、返回后、抛出异常后通知
+  - ProceedJointPoint：适用于环绕通知
+- 获取切入点方法返回值
+  - 返回后通知
+  - 环绕通知
+- 获取切入点方法运行异常信息
+  - 抛出异常后通知
+  - 环绕通知
+
+#### 3.1 获取调用参数
+
+- JoinPoint对象描述了连接点方法的运行状态，可以获取到原始方法的调用参数
+
+```java
+@Before("servicePt()")
+public void before(JoinPoint jp){
+    Object[] args = jp.getArgs();
+    System.out.println("AOP BEFORE!");
+    System.out.println("args:" + Arrays.toString(args));
+}
+```
+
+- ProceedingJoinPoint是JoinPoint子类
+
+```java
+@Around("servicePt()")
+public void around(ProceedingJoinPoint pjp) throws Throwable{
+    Object[] args = pjp.getArgs();
+    System.out.println("AOP AROUND!");
+    System.out.println("args:" + Arrays.toString(args));
+    Object ret = pjp.proceed();
+    return ret;
+}
+```
+
+#### 3.2 获取返回参数
+
+- 抛出异常后通知可以获得切入点方法中出现的异常信息，使用形参可以接收对应的异常对象
+
+```java
+// 方法参数中JoinPoint可不写，如需要的话必须写在Object ret前面
+// @AfterReturning(value = "servicePt()", returning = "ret")
+public void around(JoinPoint jp, Object ret){
+    System.out.println("Result:" + ret);
+}
+```
+
+- 环绕通知中可以书写对原始方法的调用，得到的结果即为原始方法的返回值。
+
+```java
+@Around("servicePt()")
+public void around(ProceedingJoinPoint pjp) throws Throwable{
+    Object ret = pjp.proceed();
+    return ret;
+}
+```
+
+# 二十四、Spring事务
+
+### 1. 基本案例
+
+- 事务作用：在数据层保障一系列的数据库操作同时成功或者失败
+- Spring事务作用：在数据层或业务层保障一系列的数据库操作同成功或同失败
+
+```java
+public interface PlatformTransactionManager extends TransactionManager {
+    TransactionStatus getTransaction(@Nullable TransactionDefinition var1) throws TransactionException;
+
+    void commit(TransactionStatus var1) throws TransactionException;
+
+    void rollback(TransactionStatus var1) throws TransactionException;
+}
+```
+
+1. 在业务层接口上添加Spring事务管理@Transactional
+
+```java
+public interface EmployeeService {
+    List<Employee> selectAll();
+    Employee getById(Integer id);
+    void add(Employee emp);
+    @Transactional
+    public void swapInfo(int id1, int id2);
+}
+```
+
+2. 在配置中设置事务管理器交给Spring管理
+
+```java
+public class JdbcConfig {
+    @Value("${jdbc.driver}")
+    private String driver;
+    @Value("${jdbc.url}")
+    private String url;
+    @Value("${jdbc.username}")
+    private String userName;
+    @Value("${jdbc.password}")
+    private String password;
+
+    @Bean
+    public DataSource dataSource(){
+        DruidDataSource ds = new DruidDataSource();
+        ds.setDriverClassName(driver);
+        ds.setUrl(url);
+        ds.setUsername(userName);
+        ds.setPassword(password);
+        return ds;
+    }
+
+    @Bean
+    public PlatformTransactionManager platformTransactionManager(DataSource dataSource){
+        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
+        transactionManager.setDataSource(dataSource);
+        return transactionManager;
+    }
+}
+```
+
+3. 在Spring驱动类中开启事务管理
+
+```java
+@Configuration
+@ComponentScan("com.example")
+@PropertySource("classpath:jdbc.properties")
+@EnableTransactionManagement
+@Import({JdbcConfig.class, MyBatisConfig.class})
+public class SpringConfig {
+
+}
+```
+
+- 注意事项
+  - Spring注解式事务通常添加在业务层接口中而不会添加到业务层实现中
+  - 注解式事务可以添加到业务方法上表示当前方法开启事务，也可以添加到接口上表示当前接口所有方法开启事务
+  - 事务管理器要根据实现技术进行选择
+  - MyBatis框架使用的是JDBC事务
+  - SqlSessionFactory的DataSource和PlatformTransactionManager的DataSource必须是同一个才可以正常开启Spring事务
+
+### 2. Spring事务角色与事务属性
+
+- 事务管理员：发起事务方，在Spring中通常指代业务层开启事务的方法
+- 事务协调员：加入事务方，在spring中通常指代数据层方法，也可以是业务层方法
+
+|          属性          |            作用            |                   示例                   |
+| :--------------------: | :------------------------: | :--------------------------------------: |
+|        readOnly        |     设置是否为只读事务     |              readOnly=true               |
+|        timeout         |      设置事务超时时间      |           timeout=-1(永不超时)           |
+|      rollBackFor       |  设置事务回滚异常(class)   |  rollBackFor=(NullPointException.class)  |
+|  rollBackForClassName  |  设置事务回滚异常(String)  |             同上格式为字符串             |
+|     noRollBackFor      | 设置事务不回滚异常(class)  | noRollBackFor=(NullPointException.class) |
+| noRollBackForClassName | 设置事务不回滚异常(String) |             同上格式为字符串             |
+|      propagation       |     设置为事务传播行为     |                  ......                  |
+
+```java
+// 遇到IO异常事务默认不回滚
+@Transactional(rollBackfor={IOException.class})
+public void swapInfo(int id1, int id2);
+```
+
+- 根据业务逻辑决定事务的传播行为
+
+```java
+// 将该方法设置为Spring事务
+@Transactional
+public void transfer(String out, String in, Double money){
+    try{
+        accountDao.outMoney(out, money); // Dao层数据库启事务
+        accountDao.inMoney(in, money); // Dao层数据库事务
+    }finally{
+        // 要求无论成功与否都记录日志
+        logService.log(out, in, money); // 事务，不参与回滚
+    }
+}
+```
+
+```java
+@Transactional
+public class LogServiceImpl implements LogService{
+    @Autowired
+    private LogDao logDao;
+    @Transactional(propagation=Propagation.REQUIRES_NEW)
+    public void log(String in, String out, double money){
+        logDao.log("转账操作由" + out + "到" + in + "金额：" + money);
+    }
+}
+```
+
+- 事务传播行为
+
+|     传播属性      |                          事务管理员                          | 事务协调员 |
+| :---------------: | :----------------------------------------------------------: | :--------: |
+| REQUIRED(default) |                            开启T                             |   加入T    |
+|                   |                              无                              |   新建T2   |
+|   REQUIRES_NEW    |                            开启T                             |   新建T2   |
+|                   |                              无                              |   新建T2   |
+|     SUPPORTS      |                            开启T                             |   加入T    |
+|                   |                              无                              |     无     |
+|   NOT_SUPPORTS    |                            开启T                             |     无     |
+|                   |                              无                              |     无     |
+|     MANDATORY     |                            开启T                             |   加入T    |
+|                   |                              无                              |   ERROR    |
+|       NEVER       |                            开启T                             |   ERROR    |
+|                   |                              无                              |     无     |
+|      NESTED       | 设置savePoint，一旦事务回滚，事务将滚到savePoint处，交由客户端相应提交/回滚 |            |
+
