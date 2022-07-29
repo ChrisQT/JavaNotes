@@ -10,7 +10,11 @@
 - [SpringMVC](https://github.com/ChrisQT/JavaNotes/blob/master/SpringMVC.md)
 - [MyBatis](https://github.com/ChrisQT/JavaNotes/blob/master/JDBC%2BMyBatis.md)
 
-### 三、SpringBoot
+### 三、Maven高级
+
+- [maven](https://github.com/ChrisQT/JavaNotes/blob/master/Maven.md)
+
+### 四、SpringBoot
 
 - [SpringBoot](https://github.com/ChrisQT/JavaNotes/blob/master/SpringBoot.md)
 
