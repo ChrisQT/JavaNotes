@@ -12,7 +12,7 @@
 
 ### 三、Maven高级
 
-- [maven](https://github.com/ChrisQT/JavaNotes/blob/master/Maven.md)
+- [Maven](https://github.com/ChrisQT/JavaNotes/blob/master/Maven.md)
 
 ### 四、SpringBoot
 
