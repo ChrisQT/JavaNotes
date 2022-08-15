@@ -1,3 +1,5 @@
+*本笔记参照[稀土掘金教程](https://juejin.cn/post/7035027705720471583)
+
 # 一、Swagger简介
 
 - Swagger是一款Restful接口的文档在线自动生成和功能测试功能软件。
