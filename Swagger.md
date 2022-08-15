@@ -271,3 +271,4 @@ hidden = 隐藏
 
 - swagger的页面其实是由json数据组成，可以将这些json数据存储到数据库中，以便在不启动项目的情况下访问swagger。 [http://localhost:80/json/v2/api-docs](https://link.juejin.cn/?target=http%3A%2F%2Flocalhost%3A8010%2Fjson%2Fv2%2Fapi-docs)
 
+- SpringBoot整合Swagger可能出现不兼容的情况，解决方案参照[csdn链接](https://blog.csdn.net/hadues/article/details/123753888)
