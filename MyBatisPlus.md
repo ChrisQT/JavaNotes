@@ -185,9 +185,8 @@
        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
    ```
 
-   
 
-### 三、DQL编程控制
+# 三、DQL编程控制
 
 ### 3.1 条件查询方式
 
