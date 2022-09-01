@@ -764,6 +764,7 @@ public String getAll();
   - 注意事项
 
     - 如果测试类在SpringBoot启动类的包或子包中，可以省略启动类的设置，也就是省略classes的设定
+    - 若报错NullPointerException，则在测试类的上方添加注解``@Runwith(SpringRunner.class)``
 
 ### 5.2 基于SpringBoot实现SSM整合
 
