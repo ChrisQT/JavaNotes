@@ -27,3 +27,4 @@
 
 - [Swagger](https://github.com/ChrisQT/JavaNotes/blob/master/Swagger.md)
 
+- [SpringSecurity](https://github.com/ChrisQT/JavaNotes/blob/master/SpringSecurity.md)
