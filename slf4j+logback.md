@@ -164,3 +164,118 @@ public class UserService {
     - appender节点
   
       appender的意思是追加器，在这里可以理解为一个日志的渲染器。比如渲染console日志为某种格式，渲染文件日志为另一种格式。appender中有``name``和``class``两个属性，有``rollingPolicy``和``encoder``两个子节点。name表示该渲染器的名字，class表示使用的输出策略，常见的有控制台输出策略和文件输出策略。
+    
+  - 控制台输出appender
+  
+    ```xml
+    <property name="pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg %n"/>
+    
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    	<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      	<pattern>${pattern}</pattern>
+      </encoder>
+    </appender>
+    ```
+  
+    encoder表示输出格式，具体说明如下：
+  
+    - %d表示时间
+    - %thread表示线程名
+    - %-5level表示日志级别，允许以五个字符长度输出
+    - %logger{50}表示日志的输出者，比如类名
+    - %msg表示具体的日志消息，就是logger.info("xxx")中的xxx
+    - %n表示换行
+  
+    还可以定义颜色和高亮：
+  
+    ```xml
+    <property name="pattern-color" value="%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %green(%logger{50}) - %highlight(%msg) %n"/>
+    ```
+  
+    即使用%color(xxx)来指定对应列的输出颜色，可以实现控制台输出的颜色高亮。
+  
+  - 文件输出appender
+  
+    文件输出主要包括配置：以指定格式将日志输出到指定文件夹下的文件中，可以配置该文件的名称、最大大小、保存时间
+  
+    ```xml
+    <property name="LOG_HOME" value="logs"/>
+    <property name="pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg %n"/>
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_HOME}/all.%d.%i.log</fileNamePattern>
+        <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        	<maxFileSize>10MB</maxFileSize>
+        </timeBasedFileNamingAndTriggeringPolicy>
+        <maxHistory>30</maxHistory>
+      </rollingPolicy>
+    
+      <encoder>
+        <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
+    ```
+  
+    上述配置的主要内容是：以指定的格式向logs文件下的文件输出日志，文件名称格式被指定为logs/all.日期.索引号.log，日志文件最大大小为10MB，超出则创建新文件，日志文件保留30天。索引从0开始递增，rollingPolicy指滚动策略，关于日志的文件大小限制也可以使用1GB.
+  
+  - root节点-启用配置
+  
+    root节点实际上是配置启用哪种appender，可以添加多个appender
+  
+    ```xml
+    <root level="INFO">
+    	<appender-ref ref="CONSOLE-WITH-COLOR"/>
+      <appender-ref ref="FILE"/>
+    </root>
+    ```
+  
+    表示level是info级别，启用渲染器CONSOLE-WITH-COLOR和FILE。
+  
+    按照这样的配置，输出日志时，控制台会按照CONSOLE定义的格式输出，而日志文件会按照CONSOLE-WITH-COLOR的配置去输出。
+  
+  - logger节点
+  
+    对单个包或类添加配置，覆盖上面的root
+  
+    ```xml
+        <!-- logger节点可以指定具体包或类的日志配置 -->
+        <!-- name属性为必选，指定要配置的包或类，level和additivity为可选，有缺省值 -->
+        <!-- level表示日志级别，这里配置info级别，表示info及以上级别的日志被输出 -->
+        <!-- additivity表示日志是否传递到上一级，默认为true -->
+        <logger name="com.example.logbackdemo.IndexAction" level="info" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+    ```
+
+# 七、指定启用哪些日志配置
+
+1. SpringBoot指定启用哪个xml
+
+   我们可以在springboot的配置文件中指明使用哪个xml作用logger的配置文件，比如：
+
+   ``logging.config=classpath:logback-spring-dev.xml``
+
+   如果不指定，则会按照logback.xml -> application.yml -> logback-spring.xml的顺序去查找是否存在默认的配置。
+
+2. xml中使用springProfile标签指定哪些环境下应该使用哪些配置
+
+   我们可以在具体的日志配置xml中指定哪些环境下使用哪些配置，比如：
+
+   ```xml
+   <springProfile name="local,dev">
+   	<root level="INFO">
+   		<appender-ref ref="CONSOLE-WITH-COLOR"/>
+   		<appender-ref ref="FILE"/>
+   	</root>
+   </springProfile>
+   
+   <springProfile name="prod">
+   	<root level="INFO">
+   		<appender-ref ref="CONSOLE-WITH-COLOR"/>
+   		<appender-ref ref="FILE"/>
+   	</root>
+   </springProfile>
+   ```
+
+   这样的话，就不需要建立多个xml文件了，使用一个默认的logback-spring.xml即可。
